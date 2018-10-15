@@ -7,13 +7,20 @@ declare var google;
 })
 export class MapsLibService {
 
+  cardinalPoints: any = {
+    north: 0,
+    east: 90,
+    south: 180,
+    west: 270
+  }
+
   constructor(
 
   ) {
 
   }
 
-  getDistanceBetweenPoints(start, end, units) {
+  getDistanceBetweenPoints(start, end, units = 'km') {
 
     let earthRadius = {
       miles: 3958.8,
@@ -183,6 +190,159 @@ export class MapsLibService {
     }); */
 
     return destination;
+  }
+
+  useSearchBox(map, input_id) {
+    var input = document.getElementById(input_id);
+    var searchBox = new google.maps.places.SearchBox(input);
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
+
+    // Manda los resultados del cuadro de búsqueda hacia la ventana de mapas actual
+    map.addListener('bounds_changed', () => {
+      searchBox.setBounds(map.getBounds());
+    });
+
+    var markers = [];
+    // Escucha el evento cuando el usuario selleciona una preeresultado y da un poco de info
+    searchBox.addListener('places_changed', () => {
+      var places = searchBox.getPlaces();
+
+      if (places.length == 0) {
+        return;
+      }
+      // Limpia los marcadores pasados
+      markers.forEach((marker) => {
+        marker.setMap(null);
+      });
+      markers = [];
+
+      //Obtiene el icono y nombre de la localización
+      var bounds = new google.maps.LatLngBounds();
+      places.forEach((place) => {
+        if (!place.geometry) {
+          console.log("Returned place contains no geometry");
+          return;
+        }
+        var icon = {
+          url: place.icon,
+          size: new google.maps.Size(71, 71),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(17, 34),
+          scaledSize: new google.maps.Size(25, 25)
+        };
+
+        //Crea un marcador por cada lugar
+        markers.push(new google.maps.Marker({
+          map: map,
+          icon: icon,
+          title: place.name,
+          position: place.geometry.location
+        }));
+
+        if (place.geometry.viewport) {
+          // Only geocodes have viewport.
+          bounds.union(place.geometry.viewport);
+        } else {
+          bounds.extend(place.geometry.location);
+        }
+      });
+      map.fitBounds(bounds);
+    });
+  }
+
+  drawRectangleRoute(map, poly) {
+
+    let instructions = "ELEVATE TO 20 m";
+    const CAMERA_TAKE = {
+      heigth: 60,
+      width: 100
+    }
+
+    var rectangleBorders = {
+      northEast: {
+        lat: poly.getBounds().getNorthEast().lat(),
+        lng: poly.getBounds().getNorthEast().lng()
+      },
+      southWest: {
+        lat: poly.getBounds().getSouthWest().lat(),
+        lng: poly.getBounds().getSouthWest().lng()
+      },
+      southEast: {},
+      northWest: {}
+    }
+
+    rectangleBorders.southEast = this.objectToJSON(this.intersection(LatLng.objectToLatLng(rectangleBorders.southWest),
+    this.cardinalPoints.east,
+    LatLng.objectToLatLng(rectangleBorders.northEast),
+    this.cardinalPoints.south));
+
+    rectangleBorders.northWest = this.objectToJSON(this.intersection(LatLng.objectToLatLng(rectangleBorders.northEast),
+    this.cardinalPoints.west,
+    LatLng.objectToLatLng(rectangleBorders.southWest),
+    this.cardinalPoints.north));
+
+    var direction = this.cardinalPoints.south;
+    var last_direction;
+    let home = rectangleBorders.northEast;
+    let dronePosition = home;
+
+    var distance_width = this.getDistanceBetweenPoints(rectangleBorders.northWest, rectangleBorders.northEast) * 1000;
+    var distance_height = this.getDistanceBetweenPoints(rectangleBorders.northWest, rectangleBorders.southWest) * 1000;
+
+
+    dronePosition = this.drawStep(CAMERA_TAKE.width / 2, this.cardinalPoints.west, dronePosition, map);
+
+    var distance_traveled = CAMERA_TAKE.width / 2;
+    var step;
+
+    while (distance_traveled + CAMERA_TAKE.width <= distance_width) {
+      step = (direction == this.cardinalPoints.west) ? CAMERA_TAKE.width : distance_height;
+      if (direction == this.cardinalPoints.west && distance_traveled + step > distance_width) {
+        step = distance_width - distance_traveled;
+      }
+
+      dronePosition = this.drawStep(step, direction, dronePosition, map);
+      instructions += `\nGO TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
+      if (direction == this.cardinalPoints.west) {
+        distance_traveled += CAMERA_TAKE.width;
+      }
+
+      if (direction != this.cardinalPoints.west) {
+        last_direction = direction;
+        direction = this.cardinalPoints.west;
+      } else {
+        direction = (last_direction == this.cardinalPoints.south) ? this.cardinalPoints.north : this.cardinalPoints.south;
+      }
+    };
+
+    direction = (last_direction == this.cardinalPoints.south) ? this.cardinalPoints.north : this.cardinalPoints.south;
+    step = (direction == this.cardinalPoints.west) ? CAMERA_TAKE.width : distance_height;
+    dronePosition = this.drawStep(step, direction, dronePosition, map);
+    instructions += `\nGO TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
+    // Regreso a casa
+    var return_to_home = new google.maps.Polyline({
+      map: map,
+      path: [dronePosition,
+        home
+      ],
+      strokeColor: "#00FF00",
+      strokeOpacity: 1.0,
+      strokeWeight: 2
+    });
+    dronePosition = home;
+
+    instructions += `\nRETURN TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
+    return instructions;
+
+  }
+
+  objectToJSON(obj) {
+    let result = JSON.stringify(obj);
+    result = JSON.parse(result);
+    return result;
   }
 
   toRadians(x) {
