@@ -25,10 +25,10 @@ export class MainMapComponent implements OnInit {
   }
 
   loadMap() {
-    var durango = { lat: 24.028596212016996, lng: -104.66319203292852 };
+    var mapCenter = { lat: 24.018495, lng: -104.5480484 };
 
     this.map = new google.maps.Map(document.getElementById('map'), {
-      center: { lat: 24.018495, lng: -104.5480484 },
+      center: mapCenter,
       zoom: 16,
       mapTypeId: 'hybrid',
     });
@@ -44,14 +44,14 @@ export class MainMapComponent implements OnInit {
       markerOptions: { icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png' },
 
     });
+    
     drawingManager.setMap(this.map);
 
     this.mapsLib.useSearchBox(this.map, 'pac-input');
 
     google.maps.event.addListener(drawingManager, 'rectanglecomplete', (poly) => {
-      this.mapsLib.drawRectangleRoute(this.map, poly);
+      console.log(this.mapsLib.drawRectangleRoute(this.map, poly));
     });
-
 
   }
 

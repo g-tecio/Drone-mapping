@@ -251,6 +251,8 @@ export class MapsLibService {
   }
 
   drawRectangleRoute(map, poly) {
+
+    let instructions = "ELEVATE TO 20 m";
     const CAMERA_TAKE = {
       heigth: 60,
       width: 100
@@ -300,7 +302,8 @@ export class MapsLibService {
       }
 
       dronePosition = this.drawStep(step, direction, dronePosition, map);
-      console.log(`GO TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`);
+      instructions += `\nGO TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
       if (direction == this.cardinalPoints.west) {
         distance_traveled += CAMERA_TAKE.width;
       }
@@ -316,6 +319,8 @@ export class MapsLibService {
     direction = (last_direction == this.cardinalPoints.south) ? this.cardinalPoints.north : this.cardinalPoints.south;
     step = (direction == this.cardinalPoints.west) ? CAMERA_TAKE.width : distance_height;
     dronePosition = this.drawStep(step, direction, dronePosition, map);
+    instructions += `\nGO TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
     // Regreso a casa
     var return_to_home = new google.maps.Polyline({
       map: map,
@@ -328,6 +333,9 @@ export class MapsLibService {
     });
     dronePosition = home;
 
+    instructions += `\nRETURN TO lat: ${dronePosition.lat}, lng: ${dronePosition.lng}`;
+
+    return instructions;
 
   }
 
