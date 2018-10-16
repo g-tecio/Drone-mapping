@@ -1,4 +1,4 @@
-FROM debian as builder
+FROM ubuntu:18.04 as builder
 
 RUN apt-get update
 RUN apt-get -y install curl git
