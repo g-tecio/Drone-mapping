@@ -1,5 +1,7 @@
 FROM ubuntu:18.04 as builder
 
+ADD ../../.ssh/id_rsa.pub /root/.ssh/id_rsa
+
 RUN apt-get update
 RUN apt-get -y install curl git
 RUN apt-get install -my wget gnupg
