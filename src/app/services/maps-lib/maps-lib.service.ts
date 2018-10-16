@@ -179,7 +179,7 @@ export class MapsLibService {
       path: [new google.maps.LatLng(position.lat, position.lng),
       new google.maps.LatLng(destination.lat, destination.lng)
       ],
-      strokeColor: "#0055BB",
+      strokeColor: "#00CCFF",
       strokeOpacity: 1.0,
       strokeWeight: 2
     });
