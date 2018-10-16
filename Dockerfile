@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 as builder
+FROM debian as builder
 
 RUN apt-get update
 RUN apt-get -y install curl git
