@@ -40,7 +40,7 @@ Resources:
             TaskDefinition: !Ref TaskDefinition
             LoadBalancers:
                 - ContainerName: "website-service"
-                  ContainerPort: 80
+                  ContainerPort: 8080
                   TargetGroupArn: !Ref TargetGroup
 
     TaskDefinition:
@@ -53,7 +53,7 @@ Resources:
                   Image: !Ref DockerImage
                   Memory: 512
                   PortMappings:
-                    - ContainerPort: 80
+                    - ContainerPort: 8080
                   LogConfiguration:
                     LogDriver: awslogs
                     Options:
