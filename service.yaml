@@ -17,7 +17,7 @@ Parameters:
     DesiredCount:
         Description: How many instances of this task should we run across our cluster?
         Type: Number
-        Default: 1
+        Default: 2
 
     Listener:
         Description: The Application Load Balancer listener to register with
